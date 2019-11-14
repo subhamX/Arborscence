@@ -239,18 +239,16 @@ void traversePoints(point* head){
     }
 }
 
-void dfs(vector<point*> &Adj, int n, Stack* &top, int* visited, int start){
+void dfs(vector<point*> &Adj, int n, int* visited, int start){
     visited[start] = 1;
     point* head = Adj[start];
     while(head){
         int vertex = head->data.vertex;
         if(visited[vertex]==0){
-            dfs(Adj, n, top, visited, vertex);
-            // cout<<"INSERTING"<<start<<endl;
+            dfs(Adj, n, visited, vertex);
         }
         head = head->next;
     }
-    top = insertStackNode(top, start);
 }
 void removepNode(point* &head, point* &j){
     if(j==NULL){
@@ -274,46 +272,47 @@ void removepNode(point* &head, point* &j){
             free(t1);   
             return;
         }
+        cout<<"EHEHE";
         prev = t1;
         t1 = t1->next;
     }
 
 }
-void dfs2(vector<point*> &AdjT, int n, int* visited, int start, vector<int> &comp){
-    visited[start] = 1;
-    point* head = AdjT[start];
-    comp.push_back(start);
-    while(head){
-        int vertex = head->data.vertex;
-        if(visited[vertex]==0){
-            dfs2(AdjT, n, visited, vertex, comp);
-        }
-        head= head->next;
-    }
-}
-void getSCC(vector<point*> &Adj, vector<point*> &AdjT, int n, vector< vector<int> > &comps){
-    int visited[n] = { 0 };
-    Stack* top = NULL;
-    for(int i=0; i<n; i++){
-        if(visited[i] == 0){
-            // Sending top of stack by reference
-            dfs(Adj, n, top, visited, i);
-        }
-    }
-    for(int i=0; i<n; i++){
-        visited[i] = 0;
-    }
-    vector<int> comp;
-    while(!isStackEmpty(top)){
-        int start = getStackTop(top);
-        top = deleteStackNode(top);
-        if(visited[start]==0){
-            dfs2(AdjT, n, visited, start, comp);
-            comps.push_back(comp);
-            comp.clear();
-        }
-    }
-}
+// void dfs2(vector<point*> &AdjT, int n, int* visited, int start, vector<int> &comp){
+//     visited[start] = 1;
+//     point* head = AdjT[start];
+//     comp.push_back(start);
+//     while(head){
+//         int vertex = head->data.vertex;
+//         if(visited[vertex]==0){
+//             dfs2(AdjT, n, visited, vertex, comp);
+//         }
+//         head= head->next;
+//     }
+// }
+// void getSCC(vector<point*> &Adj, vector<point*> &AdjT, int n, vector< vector<int> > &comps){
+//     int visited[n] = { 0 };
+//     Stack* top = NULL;
+//     for(int i=0; i<n; i++){
+//         if(visited[i] == 0){
+//             // Sending top of stack by reference
+//             dfs(Adj, n, top, visited, i);
+//         }
+//     }
+//     for(int i=0; i<n; i++){
+//         visited[i] = 0;
+//     }
+//     vector<int> comp;
+//     while(!isStackEmpty(top)){
+//         int start = getStackTop(top);
+//         top = deleteStackNode(top);
+//         if(visited[start]==0){
+//             dfs2(AdjT, n, visited, start, comp);
+//             comps.push_back(comp);
+//             comp.clear();
+//         }
+//     }
+// }
 
 void showAdj(vector<point*> t1){
     for(int i=0; i<t1.size(); i++){
@@ -335,6 +334,7 @@ void dfs3(vector<point*> &Adj, int n, Stack* &top, int* visited, int start, vect
         }
         int vertex = head->data.vertex;
         if(visited[vertex]==1){
+            cout<<"vertex: "<<vertex<<endl;
             // pop till you get vertex and put in comp
             while(!isStackEmpty(top)){
                 int top_vertex = getStackTop(top);
@@ -387,6 +387,7 @@ void removeAllNonZeroPoints(vector<point*> &AdjT){
             if(j->data.weight!=0){
                 int t1 = j->data.index;
                 j = j->next;
+                cout<<"REMOVING WITH INDEX: "<<t1<<endl;
                 removeNode(AdjT[i], t1);
             }else{
                 j = j->next;
@@ -398,6 +399,8 @@ void removeAllNonZeroPoints(vector<point*> &AdjT){
 void driver(vector<point*> &AdjT, int n, int start, int no_of_edges){
     point* t1;
     // DEBUG PRINT
+    cout<<"INITIAL"<<endl;
+    showAdj(AdjT);
 
     for(int i=0; i<n; i++){
         // For ith point, finding min edge weight
@@ -424,9 +427,29 @@ void driver(vector<point*> &AdjT, int n, int start, int no_of_edges){
         }
     }
     // NOTE: NO need to worry that points are not sorted. Since I am anyhow going to make newAdjT to make sure that I send the best.
+    // DEBUG PRINT
+    cout<<"AFTER REDUCTION"<<endl;
+    showAdj(AdjT);
 
+    // Creating Adj List from AdjT for SCC
+    // vector<point*> Adj(n);
     node temp;
     int source;
+    // for(int i=0; i<n; i++){
+    //     t1 = AdjT[i];
+    //     while(t1){
+    //         temp.index = t1->data.index;
+    //         temp.vertex = i;
+    //         temp.weight = t1->data.weight;
+    //         source = t1->data.vertex;
+    //         Adj[source] = addNode(Adj[source], temp);
+    //         t1 = t1->next;
+    //     }
+    // }
+
+
+
+
 
     // Copying Data to newAdjT
     vector<point*> newAdjT(n);
@@ -441,9 +464,55 @@ void driver(vector<point*> &AdjT, int n, int start, int no_of_edges){
             t1 = t1->next;
         }
     }
-    vector< vector<int> > comps;
-    getCycles(newAdjT, n, comps);
+    deallocateDriver(AdjT, n);
+    AdjT.clear();
+    AdjT.resize(n);
+    cout<<"AFTER DEALLOCATION:\n";
+    showAdj(AdjT);
+    for(int i=0; i<n; i++){
+        t1 = newAdjT[i];
+        while(t1){
+            temp.index = t1->data.index;
+            temp.vertex = t1->data.vertex;
+            temp.weight = t1->data.weight;
+            source = i;
+            AdjT[source] = addNode(AdjT[source], temp);
+            t1 = t1->next;
+        }
+    }
 
+    // AdjT = newAdjT;
+
+    // Keeping only 1 zero node in AdT;
+    point* temp1 = NULL;
+    for(int i=0; i<n; i++){
+        point* j = AdjT[i];
+        while(j){
+            point* k = j->next;
+            while(k){
+                point* temp1 = k->next;
+                removeNode(AdjT[i], k->data.index);
+                k = temp1;
+            }
+            // if(j->data.weight!=0){
+            //     removeNode(AdjT[i], j->data.index);
+            // }
+            j=NULL;
+        }
+    }
+    // har ekk node pe sirf ekk point rakho. And delete rest. You have already ensured lexicographically
+    vector< vector<int> > comps;
+    getCycles(AdjT, n, comps);
+
+    // DEBUG PRINT
+    cout<<"PRINTING SCC:"<<endl;
+    for(int i=0; i<comps.size(); i++){
+        cout<<"SIZE OF "<<i<<"TH "<<comps[i].size()<<endl;
+        for(int j=0; j<comps[i].size(); j++){
+            cout<<comps[i][j]+1<<endl;
+        }
+        cout<<endl;
+    }
     /*
         SUMMARY TILL NOW.
         newAdjT and AdjT are my potential arborescence.
@@ -458,12 +527,14 @@ void driver(vector<point*> &AdjT, int n, int start, int no_of_edges){
     }
     int flag=0;
 
+    cout<<"MAKING SUPERNODE\n";
     for(int i=0; i<comps.size(); i++){
         // Cycle of 1 length
         if(comps[i].size()<=1){
             if(comps[i].size()==0){
-                cout<<"[CHECK]ZERO SIZED CYCLE1! NOT POSSIBLE!";
+                cout<<"ZERO SIZED CYCLE1! NOT POSSIBLE!";
             }
+            cout<<"Size 1 cycle: "<<comps[i][0]+1<<endl;
             continue;
         }
         flag=1;
@@ -474,6 +545,8 @@ void driver(vector<point*> &AdjT, int n, int start, int no_of_edges){
             min_index = min(min_index, comps[i][j]);
         }
 
+        cout<<"MIN INDEX:"<<min_index+1<<"\n";
+
         for(int j=0; j<size; j++){
             int num = comps[i][j];
             // Excluding changes to the supernode_index
@@ -481,8 +554,10 @@ void driver(vector<point*> &AdjT, int n, int start, int no_of_edges){
             point* k = newAdjT[num];
             // TODO: num ki adjacency list se saare nodes going to any node other than this SCC ko min_index mein shift karna h
             // Else unki visibility false karni h
+            cout<<"CANDIDATE: "<<num+1<<endl;
             while(k){
                 // cout<<k->data.index<<endl;
+                cout<<"INDEX ID: "<<k->data.index<<"DEST-VERTEX"<<k->data.vertex+1<<endl;
                 int dest = k->data.vertex;
                 int is_dest_to_cycle=0;
                 for(int qwe=0; qwe<comps[i].size(); qwe++){
@@ -494,6 +569,7 @@ void driver(vector<point*> &AdjT, int n, int start, int no_of_edges){
                 // trying to either make the node invisible or transfer of num
                 // If the edge destination is an internal point
                 if(is_dest_to_cycle){
+                    cout<<"DESTINATION TO CYCLE\n";
                     node payload = k->data;
                     int_node u1;
                     u1.vertex = num;
@@ -503,8 +579,10 @@ void driver(vector<point*> &AdjT, int n, int start, int no_of_edges){
                     k=k->next;
                     removeNode(newAdjT[num], payload.index);
                 }else{
+                    cout<<"DESTINATION NOT TO CYCLE\n";                    
                     // If from supernode_index outer edge is going! Then Not deleting it. 
                     if(comps[i][j]==min_index){
+                        cout<<"DESTINATION TO MIN-INDEX\n";
                         k = k->next;
                         continue;
                     }
@@ -513,8 +591,14 @@ void driver(vector<point*> &AdjT, int n, int start, int no_of_edges){
                     node_transfer[k->data.index] = num;
                     newAdjT[min_index] = addNode(newAdjT[min_index], k->data);
                     int foo = k->data.index;
+                    // DEBUG PRINT
+                    cout<<"CALLING 1: "<<num+1<<" "<<k->data.vertex+1<<endl;
+
                     k = k->next;
                     removeNode(newAdjT[num], foo);
+                    // DEBUG PRINT
+                    cout<<"SHOWING ADJT 1:"<<endl;
+                    showAdj(newAdjT);
                 }
             }
 
@@ -533,6 +617,8 @@ void driver(vector<point*> &AdjT, int n, int start, int no_of_edges){
             min_index = min(min_index, comps[i][j]);
         }
 
+        cout<<"MIN INDEX:"<<min_index+1<<endl;
+
         for(int j=0; j<size; j++){
             int num = comps[i][j];
             // For all points inside the component except min_vertex whose name need not be changed
@@ -545,41 +631,70 @@ void driver(vector<point*> &AdjT, int n, int start, int no_of_edges){
                 // DEBUG PRINT
                 if(u1==num){
                     if(newAdjT[num]!=NULL){
-                        cout<<"[ERROR] YOU SHOULD BE ZERO BY NOW"<<endl;
+                        cout<<"YOU SHOULD BE ZERO BY NOW"<<endl;
+                        showAdj(newAdjT);
                     }
                 }
                 while(k){
                     // If destination is num i.e destination to cycle
                     if(k->data.vertex==num){
                         name_change[k->data.index] = num;
+                        cout<<"CHANGING NAME OF:"<<num+1<<" TO:"<<min_index+1<<endl;
                         k->data.vertex = min_index;
+                        showAdj(newAdjT);
                     }
                     k = k->next;
                 }
             }
         }
     }
+    cout<<"SHOWING WITH SUPERNODE\n";
+    showAdj(newAdjT);
 
+    cout<<"SHOWING NAME CHANGE\n";
+    for(int i=0; i<no_of_edges; i++){
+        cout<<name_change[i]<<" ";
+    }
+    cout<<endl;
     // Till Now SuperNode Ban Chuka h. And it is in newAdjT
     if(flag==0){
         // There is no cycle. i.e No SuperNode. It means AdjT and newAdjT is Arborescence. 
         // Deleting all edges with non-zeros weights
         removeAllNonZeroPoints(AdjT);
+        cout<<"RETURNING ANSWER 😀\n";
         return;
     }
 
+
+    // cout<<"BEFORE RECURSION SHOWING NODE TRANSFER\n";
+    // for(int i=0; i<no_of_edges; i++){
+    //     cout<<node_transfer[i]<<" ";
+    // }
+    cout<<endl;
     driver(newAdjT, n, start, no_of_edges);
+    cout<<"RECIEVED: \n";
+    showAdj(newAdjT);
     // Changing Names
     for(int i=0; i<newAdjT.size(); i++){
         point* j = newAdjT[i];
         while(j){
             if(name_change[j->data.index]!=-1){
                 // There was some name change
+                cout<<"I AM CHANGING NAMES"<<j->data.index<<endl;
                 j->data.vertex = name_change[j->data.index];
             }
             j = j->next;
         }
     }
+
+    // cout<<"AFTER CHANGING NAMES"<<endl;
+    // showAdj(newAdjT);
+
+    // cout<<"AFTER RECURSION SHOWING NODE TRANSFER\n";
+    // for(int i=0; i<no_of_edges; i++){
+    //     cout<<node_transfer[i]<<" ";
+    // }
+    // cout<<endl;
 
     // Transferred Nodes ko delete karna h and original adj mein daalna h
     for(int i=0; i<newAdjT.size(); i++){
@@ -592,9 +707,11 @@ void driver(vector<point*> &AdjT, int n, int start, int no_of_edges){
                 node_transfer[j->data.index] = -1;
                 // I am pushing updated data to newAdjT. Good Thing. As if there are any changes then it is retained.
                 newAdjT[original_vertex] = addNode(newAdjT[original_vertex], j->data);
+                cout<<"CALLING 2: "<<i+1<<" "<<original_vertex+1<<" "<<j->data.index<<endl;
                 int foo = j->data.index;
                 j = j->next;
                 removeNode(newAdjT[i], foo);
+                showAdj(newAdjT);
             }else{
                 // Moving the pointer 1 step only if there is no deletion
                 j = j->next;
@@ -612,6 +729,8 @@ void driver(vector<point*> &AdjT, int n, int start, int no_of_edges){
             newAdjT[vertex] = addNode(newAdjT[vertex], payload);
         }
     }
+    cout<<"newAdjT after Adding all nodes:"<<endl;
+    showAdj(newAdjT);
 
     // Removing 1 edge(inside of cycle) and adding 1 edge(outside of cycle)
     // SUMMARY - adjT is where I need to give final Answer. Right Now newAdjT has 1 extra edge. 
@@ -622,9 +741,12 @@ void driver(vector<point*> &AdjT, int n, int start, int no_of_edges){
         exactly 2. I will then compare it with newAdjT. newAdjT will have 1 extra node. I will remove the cyclic node from newAdjT.
         NOTE: newAdjT even after adding all nodes will not have a single non-zero edge
     */
-
+    cout<<"AdjT BEFORE REMOVING NON ZERO!"<<endl;
+    showAdj(AdjT);
     // Removing all non-zero Points
     removeAllNonZeroPoints(AdjT);
+    cout<<"adjT AFTER REMOVING NON ZERO!"<<endl;
+    showAdj(AdjT);
 
 
     for(int i=0; i<n; i++){
@@ -634,29 +756,55 @@ void driver(vector<point*> &AdjT, int n, int start, int no_of_edges){
             size++;
             j = j->next;
         }
-        if(size>2){
+        cout<<"CASE: "<<i+1<<endl;
+        cout<<"ADJT"<<endl;
+        showAdj(AdjT);
+        cout<<"NEW ADJT"<<endl;
+        showAdj(newAdjT);
+        if(size==2){
+            cout<<"SIZE IS 2"<<endl;
+        }else if(size>2){
             cout<<"SIZE IS NOT 2, LOGIC FAILURE. SIZE IS "<<size<<endl;
             continue;
-        }else if(size<2){
+        }else{
             // Indegree is less than or equal to 1. NO PROBLEM
+            cout<<"[FINE]SIZE IS NOT 2, IT IS "<<size<<endl;
             continue;
         }
-        // Only if size is 2.
-
+        cout<<i<< " "<< start<<endl;
         // Don't know! This case is not possible! Start ki AdjT mein zero Indexes Honge
         if(i==start-1){
             continue;
         }
         size=0;
 
+        // DEBUG CODE
+        point* very_temp = AdjT[i];
+        while(very_temp){
+            size++;
+            very_temp = very_temp->next;
+        }
+        if(size!=1){
+            cout<<"SIZE of AdjT is NOTONE: "<<size<<endl;
+        }else{
+            cout<<"NO PROBLEM"<<endl;
+        }
+        // DEBUG CODE END.
+
         int index = newAdjT[i]->data.index;
         int index1 = (newAdjT[i]->next)->data.index;
         int cycle_index = AdjT[i]->data.index;
-
+        cout<<"index "<<index<<" index1"<<index1<<" cycle_index "<<cycle_index<<endl;
+        cout<<"DELETING_TRADE: "<<i+1<<" "<<AdjT[i]->data.vertex+1<<endl;
         if(cycle_index==index){
+            // Delete this edge!
+            cout<<"DELETING: "<<index<<endl;
             removeNode(newAdjT[i], index);
+            // AdjT[i]->visible = false;
         }else if(cycle_index==index1){
+            cout<<"DELETING: "<<index1<<endl;
             removeNode(newAdjT[i], index1);
+            // (AdjT[i]->next)->visible = false;
         }else{
             cout<<"WRONG LOGIC! KISI EKK KO TOH SAME HONA THA."<<endl;
         }
@@ -681,7 +829,7 @@ bool binarySearch(vector<int> &arbor, int size, int index){
     return false;
 }
 
-void dijkstra(vector< long long > &distance, vector<point*> &A, int n){
+void dijkstra(vector< long long > &distance, vector<point*> &A, int n, vector<int> &parent){
     int visited[n] = { 0 };
     for(int i=0; i<n; i++){
         int x = -1;
@@ -701,6 +849,7 @@ void dijkstra(vector< long long > &distance, vector<point*> &A, int n){
             int dest = j->data.vertex;
             long long newDist = distance[x]+j->data.weight;
             if(distance[dest]>newDist){
+                parent[dest] = x+1;
                 distance[dest] = newDist;
             }
             j = j->next;
@@ -710,7 +859,6 @@ void dijkstra(vector< long long > &distance, vector<point*> &A, int n){
 
 
 int main(){
-    point* head = NULL;
     node payload;
     int t;
     cin>>t;
@@ -719,18 +867,20 @@ int main(){
         cin>>n>>start>>m;
         vector<point*> AdjT(n, NULL);
         vector<point*> Adj(n, NULL);
+        int maxIndex = 0;
+        // Creating Adjacency List
         for(int i=0; i<m; i++){
             cin>>source>>dest>>wt;
             source-=1;
             dest-=1;
-            payload.index = i;
-            payload.vertex = source;
+            payload.index = maxIndex;
+            payload.vertex = dest;
             payload.weight = wt;
-            point* j = AdjT[dest];
+            point* j = Adj[dest];
             int h1=0;
-            // Checking if an edge already exist. If yes then, I am only updating.
+            // Checking if an edge already exist from SOURCE to DEST. If yes then, only updating it.
             while(j){
-                if(j->data.vertex==source){
+                if(j->data.vertex==dest){
                     h1=1;
                     if(j->data.weight>wt){
                         j->data.weight = wt;
@@ -740,34 +890,51 @@ int main(){
                 j = j->next;
             }
             if(h1==0){
-                AdjT[dest] = addNode(AdjT[dest], payload);
-                payload.vertex = dest;
                 Adj[source] = addNode(Adj[source], payload);
+                maxIndex++;
             }
         }
-        // TODO : Check if all nodes has atleast 1 indegree.(except start). If No print -1;
-        int flag=0;
+
+        // ASSUMING ARBORESCENCE EXIST
+
+        // Removing all nodes and their edges which are not reachable by start
+        int visited_index[n] = { 0 };
+        dfs(Adj, n, visited_index, start-1);
+
+        // Deleting Non-Reachable Edges from start
         for(int i=0; i<n; i++){
-            int size=0;
-            point* j = AdjT[i];
-            while(j){
-                j = j->next;
-                size++;
-            }
-            if(i==start-1){
-                if(size!=0){
-                    cout<<"-1"<<endl;
-                    flag=1;
-                    break;
+            if(visited_index[i]==0){
+                point* j = Adj[i];
+                while(j){
+                    int index = j->data.index;
+                    j = j->next;
+                    removeNode(Adj[i], index);
                 }
-            }else if(size==0){
-                cout<<"UNREACHABILITY"<<endl;
             }
         }
-        if(flag==1){
-            continue;
+
+        // Creating Adjacency Transpose (AdjT)
+        for(int i=0; i<n; i++){
+            point* j = Adj[i];
+            while(j){
+                payload = j->data;
+                int source = payload.vertex;
+                payload.vertex = i;
+                AdjT[source] = addNode(AdjT[source], payload);
+                j = j->next;
+            }
         }
+
+        // DRIVER Function Call
         driver(AdjT, n, start, m);
+        // AdjT has the Arborescence
+
+        // DEBUG PRINT
+        cout<<"FINAL"<<endl;
+        showAdj(AdjT);
+        
+        
+        // Adding all indexes of edges in arborescence into arbor
         vector<int> arbor;
         for(int u1=0; u1<n; u1++){
             point* u2 = AdjT[u1];
@@ -777,31 +944,67 @@ int main(){
             }
         }
         int arbor_size = arbor.size();
+        // Sorting the Arbor Array
         mergeSort(arbor, 0, arbor_size-1);
+
+        // DEBUG PRINT
+        cout<<"ARBOR ARRAY:"<<endl;
+        for(int u1=0; u1<arbor_size; u1++){
+            cout<<arbor[u1]<<" ";
+        }
+        cout<<endl;
+
+
+        cout<<"PURANA ADJ"<<endl;
+        showAdj(Adj);
+
+        // Removing all elements in Adj and keeping only the Arborescence Part. (REASON: AdjT all edge weights are zero)
         long long total_cost=0;
         for(int u1=0; u1<n; u1++){
             point* u2 = Adj[u1];
             while(u2){
                 if(binarySearch(arbor, arbor_size, u2->data.index)){
+                    // cout<<"BINARY SEARCH TRUE"<<u2->data.index<<endl;
                     total_cost+=u2->data.weight;
                     u2 = u2->next;
                 }else{
+                    // cout<<"REMOVING"<<u2->data.index<<endl;
                     int foo = u2->data.index;
                     removeNode(Adj[u1], u2->data.index);
                     u2 = u2->next;
                 }
             }
         }
+
+        // Calculating Distance and parent
         vector<long long> distance(n, INT_MAX);
+        vector<int> parent(n, -1);
         distance[start-1] = 0;
-        dijkstra(distance, Adj, n);
+        parent[start-1] = 0;
+        // Calling dijkstra
+        dijkstra(distance, Adj, n, parent);
+
+
+        // PRINTING OUTPUT
         cout<<total_cost<<" ";
         for(int i=0; i<n; i++){
-            cout<<distance[i]<<" ";
+            if(distance[i]!=INT_MAX){
+                cout<<distance[i]<<" ";
+            }else{
+                cout<<"# ";
+            }
+        }
+        // Storing Parent in 1 indexing
+        for(int i=0; i<n; i++){
+            cout<<parent[i]<<" ";
         }
         cout<<endl;
+        // PRINTING OUTPUT END
+
         
+        // Deallocating Memory
         deallocateDriver(AdjT, n);
+        deallocateDriver(Adj, n);
     }
 
     return 0;
